@@ -1,0 +1,248 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef NO_MFC
+#include "afxres.h"
+#else
+#include <winuser.h>
+#include <winresrc.h>
+#ifndef IDC_STATIC
+#define IDC_STATIC	(-1)
+#endif
+#endif /* NO_MFC */
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""newres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_APPICON             ICON    DISCARDABLE     "appicon.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_STARTUPFILE DIALOG DISCARDABLE  0, 0, 222, 67
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Path"
+BEGIN
+    EDITTEXT        IDC_STARTUPFILE,6,41,189,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_FILEOPENDLG,199,41,15,14
+    GROUPBOX        "Specify the ini file",IDC_STATIC,2,24,217,43
+    LTEXT           "You can specify an arbitrary file as an mg.ini file.  The change will be valid from the next execution time of Mg for Win32",
+                    IDC_STATIC,4,4,214,17
+END
+
+IDD_KEY DIALOG DISCARDABLE  0, 0, 222, 67
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Key"
+BEGIN
+    LTEXT           "Keyboard configuration can be done here.",IDC_STATIC,4,
+                    4,214,17
+    CONTROL         "Use Tab key as a Control key",IDC_CONTROLMAP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,42,134,10
+    GROUPBOX        "Key mapping",IDC_STATIC,2,24,217,43
+END
+
+IDD_VIEW DIALOG DISCARDABLE  0, 0, 222, 67
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "View"
+BEGIN
+    LTEXT           "Configure the view of application window.",IDC_STATIC,4,
+                    4,214,10
+    CONTROL         "Show menubar",IDC_SHOWMENUBAR,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,28,90,10
+    LTEXT           "Execute M-x configure to expose this dialog box when the menubar is not shown.",
+                    IDC_STATIC,10,41,200,20
+    GROUPBOX        "Configure the view",IDC_STATIC,2,18,217,49
+END
+
+IDD_BEEP DIALOG DISCARDABLE  0, 0, 222, 67
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Beep"
+BEGIN
+    CONTROL         "Use beep sound",IDC_BEEP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,9,15,67,10
+    PUSHBUTTON      "Play",IDC_PLAY,84,14,21,11
+    CONTROL         "System defined",IDC_MESSAGEBEEP,"Button",
+                    BS_AUTORADIOBUTTON,11,34,86,10
+    COMBOBOX        IDC_MESSAGECOMBO,106,31,96,61,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Wave file",IDC_PLAYSOUND,"Button",BS_AUTORADIOBUTTON,11,
+                    50,94,10
+    EDITTEXT        IDC_SOUNDFILE,106,48,96,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_SOUNDBUTTON,204,48,10,14
+    GROUPBOX        "Beep sound configuration",IDC_STATIC,2,2,217,65
+END
+
+IDD_FONT DIALOG DISCARDABLE  0, 0, 222, 67
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Font"
+BEGIN
+    CONTROL         "Use &default for Mg for Win32",IDC_NOSPECIFY,"Button",
+                    BS_AUTORADIOBUTTON,10,14,158,10
+    CONTROL         "&Specify font and line spacing",IDC_SPECIFY,"Button",
+                    BS_AUTORADIOBUTTON,10,27,111,10
+    LTEXT           "&Font:",IDC_STATIC,15,46,20,8
+    COMBOBOX        IDC_FONTNAME,41,44,65,64,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_POINT,109,44,28,86,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Line spacing:",IDC_STATIC,144,47,42,8
+    EDITTEXT        IDC_LINESPACE,190,44,14,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Spin1",IDC_SPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_AUTOBUDDY | UDS_ARROWKEYS,203,44,9,14
+    GROUPBOX        "Configuration for Font",IDC_STATIC,2,2,217,65
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_REBAR               BITMAP  DISCARDABLE     "rebar.bmp"
+IDB_BUTTONS             BITMAP  DISCARDABLE     "buttons.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDB_BUTTONS TOOLBAR DISCARDABLE  16, 16
+BEGIN
+    BUTTON      IDBN_MARK
+    BUTTON      IDBN_NEXT
+    BUTTON      IDBN_PRIOR
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Data
+//
+
+IDR_PPCMENU SHMENUBAR DISCARDABLE 
+BEGIN
+    IDR_PPCMENU, 4,
+    I_IMAGENONE, IDM_MENUITEM1, TBSTATE_ENABLED, 
+    TBSTYLE_DROPDOWN | TBSTYLE_AUTOSIZE, IDS_FILE, 0, 0,
+    0, IDC_MARK, TBSTATE_ENABLED, TBSTYLE_AUTOSIZE, 0, 0, 1,
+    2, IDC_PRIOR, TBSTATE_ENABLED, TBSTYLE_AUTOSIZE, 0, 0, 1,
+    1, IDC_NEXT, TBSTATE_ENABLED, TBSTYLE_AUTOSIZE, 0, 0, 1,
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "&Option...",                  IDC_OPTION
+        MENUITEM "E&xit",                       IDC_CLOSE
+    END
+END
+
+IDR_PPCMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "Option...",                   IDC_OPTION
+        MENUITEM "Exit",                        IDC_CLOSE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILE                "File"
+    IDS_CONFIGNAME          "Mg for Win32 properties"
+    IDS_OK                  "OK"
+    IDS_ICONASTERISK        "Information"
+    IDS_ICONEXCLAMATION     "Caution"
+    IDS_ICONHAND            "Error"
+    IDS_ICONQUESTION        "Question"
+    IDS_CUT                 "Cut(C-w)"
+    IDS_COPY                "Copy(M-w)"
+    IDS_PASTE               "Paste(C-y)"
+    IDS_MARK                "Mark(C-@)"
+    IDS_NEXT                "Scroll up(C-v)"
+    IDS_PRIOR               "Scroll down(M-v)"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

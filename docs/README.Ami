@@ -1,0 +1,66 @@
+# $Id: README.Ami,v 1.3 2000/10/24 16:09:49 amura Exp $
+README.Ami -- この file には、Ng Amiga OS におけるソースの変更点につい
+              て記述してあります。
+
+
+1.   Amiga 依存部分ソース
+
+    sys/amiga にある機種依存ソースは、mg2b(FredFish#147) のものをベー
+スに、Ng で機能拡張された ReadOnlyMode とか ShellCommand の起動とか、
+TABによる filename 補完などに必要なものを追加した形になっています。追
+加は主に ttyio.c fileio.c に対して行なわれています。その辺りの説明は省
+くとして、アルゴリズム的(?)に mg2b から大きく変更したのは、次の 2 点で
+す。
+
+      1) ttyio.c 内のルーチンで行なわれていた各 Shared Library の
+         Open,Close を、sysinit.c に移動した。(この方がリーズナブルで
+         ある)
+      2) RAWkeyConvert によって行なわれていた Keyboard からの入力を、
+         Console Device からの Read に変更した。(日本語対応のため)
+
+また、一部 AREXX への対応のための変更を加えた箇所がありますが、現在
+AREXX 未対応のため無効です。当初、mg3b(FredFish#352) の AREXX 用ルーチ
+ンを利用すれば簡単に対応可能ではと考えたのですが、mg3b ではkeyboardマ
+クロ機能が強化されていて、AREXX ルーチンはこれと無関係ではなく、マクロ
+関連ルーチンまでの変更となるとかなり大掛かりな改造が必要なため、今回は
+見送ってあります。(もっとも、わたしが Ng のkeyboard マクロ及びAREXX に
+精通してないのが見送ることになった最大の要因ではありますが)さらに、
+file R/W 時の Mouse pointer を sleep pointer に変更するためpublic
+domain なソース、zz_pointer.c を追加しました。
+
+
+2.   Scratch から再実装されたソース
+
+    Ng 1.4.1 で、Amiga 依存部分ソースのうち、 menustack.c は削除され、
+ttymenu.c、iconify.[ch] は新たに書き直されました。これは、
+
+    1) ttymenu.c は変更不可とされており、ttymenu.c が依存している
+       menustack.c は変更不可/商用利用不可である。
+    2) iconify.[ch] は変更の許可が不明で、またソースコードを付けて配布
+       すること、また、これを利用したソフトを(iconify.cの)作者に送る事、
+       が使用条件である。(しかし、作者との連絡方法は不明)
+
+となっていて、変更が許可されていないにもかかわらず Ng では変更して使用し
+ていたこと、また、変更前のソースコードに戻したとしても、現在の Ng の配布
+条件とはあわないことが理由です。
+
+    新たに作成した ttymenu.c、iconify.[ch] は村松が無から作成し直した物で
+あり、趣味もしくは技術的な理由により元の物の完全なコピーではありません。
+
+    1) マクロ V2 を定義してコンパイルすると、アイコン化に
+       workbench.library の機能を使うようになります。
+    2) メニューの構造がGNU Emacsに近くなりました。
+    3) Kg 4.x で追加されたコマンドボックスは使えなくなりました。
+    4) ASL を使わない BROWSER 機能は実装されていません。
+
+
+3.   使用コンパイラ、コンパイル方法
+
+    現在 Ng は GeekGadgets　990501 SNAPSHOT、DICE 3.57 でのコンパイルを確
+認しております。SAS C、Manx 用の Makefile も付属しますが、これは SAS C や
+Manx でコンパイルできるという保証ではありません。
+    コンパイル方法は sys/amiga から、必要な Makefile / DMakefile をカレン
+トディレクトリのコピーして make(or DMake) ですむと思います。
+
+H.Ohkubo (ASCII-net pcs35757)				Dec.31,1992
+amura(村松 篤)				<修正加筆>	Oct.25,2000

@@ -1,0 +1,148 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl $Id: configure.in,v 1.7.2.1 2003/02/23 13:50:21 amura Exp $
+AC_REVISION($Revision: 1.7.2.1 $)
+AC_INIT(basic.c)
+AC_CONFIG_HEADER(sysconfig.h:sys/unix/sysconfig.h.in)
+AC_CONFIG_AUX_DIR(sys/unix)
+
+dnl Checks for programs.
+AC_CANONICAL_HOST
+USER_CFLAGS=$CFLAGS
+AC_PROG_CC
+AC_PROG_INSTALL
+
+dnl Don't strip if we don't have it
+AC_CHECK_PROG(STRIP, strip, strip, :)
+
+dnl Set default value for CFLAGS if none is defined or it's empty
+if test -z "$USER_CFLAGS"; then
+  CFLAGS="-O"
+  test "$GCC" = yes && CFLAGS="-O2"
+else
+  CFLAGS=$USER_CFLAGS
+fi
+
+AC_MINIX
+
+dnl Checks for libraries.
+dnl Search tgetstr() in termcap, termlib, curses
+AC_ARG_WITH(terminfo,
+	[  --with-terminfo         Build with terminfo library.],
+	[ts_with_terminfo="yes"], [ts_with_terminfo="no"])
+AC_ARG_WITH(termcap, 
+	[  --with-termcap          Build with termcap library. (default)],
+	[ts_with_terminfo="no"])
+if test "$ts_with_terminfo" = "yes"; then
+ AC_SEARCH_LIBS(tgetstr, curses ncurses termlib)
+else
+ AC_SEARCH_LIBS(tgetstr, termcap curses ncurses)
+fi
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h sys/file.h sys/ioctl.h sys/time.h termio.h termios.h sgtty.h unistd.h sys/param.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl CYGWIN has fd_set, but cannot detect it by AC_CHECK_TYPE
+if test "$host_os" != "cygwin"; then
+  AC_CHECK_TYPE(fd_set, int)
+fi
+dnl Minix define SIGTSTP but don't have suspend yet...
+dnl I want to use $host_os, but cannot use it because Minix's sed has bug...
+case "$host" in
+  *-*-minix*)
+    AC_DEFINE(UNDEF_SIGTSTP, 1);;
+esac
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MEMCMP
+AC_TYPE_SIGNAL
+AC_FUNC_VFORK
+AC_CHECK_FUNCS(getcwd rmdir rename opendir select mkstemp bcopy bzero bcmp)
+AC_CHECK_FUNCS(rindex symlink dup2 sigprocmask getgroups)
+
+dnl Checks for commands called from dired
+AC_PATH_PROG(cp_cmd, cp)
+AC_DEFINE_UNQUOTED(CP_CMD, "$cp_cmd")
+AC_PATH_PROG(mv_cmd, mv)
+AC_DEFINE_UNQUOTED(MV_CMD, "$mv_cmd")
+AC_PATH_PROG(ls_cmd, ls)
+AC_DEFINE_UNQUOTED(LS_CMD, "$ls_cmd")
+AC_PATH_PROG(rmdir_cmd, rmdir)
+AC_DEFINE_UNQUOTED(RMDIR_CMD, "$rmdir_cmd")
+
+dnl If the user wants canna support.
+AC_MSG_CHECKING(if --enable-canna option specified)
+AC_ARG_ENABLE(canna,
+	[  --enable-canna[=DIR]    Build a canna version.],
+	[cv_canna="yes"; cannapath=$enableval], [cv_canna="no"])
+AC_MSG_RESULT($cv_canna)
+if test "$cv_canna" = "yes"; then
+
+dnl Some operating system include canna libraries by default.
+dnl Use that pathname by default.
+dnl for freebsd2.*, order DOES matter.  don't bother.
+	if test "$cannapath" = "yes"; then
+		case "$host_os" in
+		bsdi2.1)
+			cannapath="/usr/contrib/canna";;
+		netbsd*)
+			cannapath="/usr/pkg";;
+		freebsd2.2*)
+			cannapath="/usr/local";;
+		freebsd2*)
+			cannapath="/usr/local/canna";;
+		freebsd*)
+			cannapath="/usr/local";;
+		*)
+			cannapath="/usr/local/canna";;
+		esac
+	fi
+
+	if test "$cannapath" != "yes"; then
+		CFLAGS="-I$cannapath/include $CFLAGS"
+		LDFLAGS="-L$cannapath/lib $LDFLAGS"
+	fi
+
+dnl we use AC_TRY_COMPILE not AC_CHECK_HEADER, to avoid unnecessery
+dnl use of CPPFLAGS. (why?)
+	AC_MSG_CHECKING(for canna/jrkanji.h)
+	AC_CACHE_VAL(ac_cv_cannahdrcheck, [dnl
+	AC_TRY_COMPILE([#include <canna/jrkanji.h>], jrKanjiStatus ks;,
+		[ac_cv_cannahdrcheck="yes"], [ac_cv_cannahdrcheck="no"])])
+	AC_MSG_RESULT($ac_cv_cannahdrcheck)
+	if test "$cannahdrcheck" = "no"; then
+		echo -n "Fatal error: no canna header in suggested path"
+		if test "$cannapath" != "yes"; then
+			echo ", $cannapath/include."
+		else
+			echo "."
+		fi
+		exit 1
+	fi
+
+	AC_CHECK_LIB(canna, jrKanjiControl,
+		[cv_cannalibcheck="yes"], [cv_cannalibcheck="no"])
+	if test "$cannalibcheck" = "no"; then
+		echo "Fatal error: no canna library in suggested path"
+		if test "$cannapath" != "yes"; then
+			echo ", $cannapath/lib."
+		else
+			echo "."
+		fi
+		exit 1
+	fi
+	LIBS="-lcanna $LIBS"
+	AC_DEFINE(CANNA)
+fi
+
+AC_OUTPUT(Makefile:sys/unix/Makefile.in)
