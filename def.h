@@ -361,8 +361,9 @@ typedef struct	BUFFER {
 #define	SJIS	1			/* KANJI code is Shift-JIS.	*/
 #define	JIS	2			/* KANJI code is JIS.		*/
 #define	EUC	3			/* KANJI code is EUC.		*/
-#define	NIL	4			/* Not decided.			*/
-#define	T	5			/* Guess.			*/
+#define UTF8	4			/* KANJI code is UTF-8		*/
+#define	NIL	5			/* Not decided.			*/
+#define	T	6			/* Guess.			*/
 #endif	/* KANJI */
 #ifdef	READONLY	/* 91.01.05  by S.Yoshida */
 #define	BFRONLY	0x20			/* Read only mode.		*/

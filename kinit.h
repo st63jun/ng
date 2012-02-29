@@ -23,6 +23,7 @@
 /*	SJIS	KANJI code is Shift-JIS.	*/
 /*	JIS	KANJI code is JIS.		*/
 /*	EUC	KANJI code is EUC.		*/
+/*	UTF8	KANJI code is UTF8.		*/
 /*	NIL	Not decided.			*/
 /*	T	Guess.				*/
 #ifdef	MSDOS	/* 90.02.11  by S.Yoshida */
@@ -43,10 +44,10 @@
 #define	KINPUT		SJIS	/* kanji-input-code		*/
 #define	KDISPLAY	SJIS	/* kanji-display-code		*/
 #else	/* WIN32 */
-#define	KFIO		NIL		/* default-kanji-fileio-code	*/
+#define	KFIO		UTF8		/* default-kanji-fileio-code	*/
 #define	KEXPECT		T		/* kanji-expected-code		*/
-#define	KINPUT		EUC		/* kanji-input-code		*/
-#define	KDISPLAY	EUC		/* kanji-display-code		*/
+#define	KINPUT		UTF8		/* kanji-input-code		*/
+#define	KDISPLAY	UTF8		/* kanji-display-code		*/
 #endif	/* WIN32 */
 #endif	/* HUMAN68K */
 #endif	/* MSDOS */

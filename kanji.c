@@ -68,16 +68,16 @@ static int to_kana_display = TO_KANADISPLAY;  /* to-kana-display	*/
 #endif  /* HANKANA */
 static int local_kfin;			/* Buffer local file input code. */
 
-static char symbol_c[] = {'N', 'S', 'J', 'E', '-', 'T'};
-static char *symbol_s[] = {"No-conversion", "Shift-JIS", "JIS", "EUC", "NIL", "T"};
+static char symbol_c[] = {'N', 'S', 'J', 'E', 'W', '-', 'T'};
+static char *symbol_s[] = {"No-conversion", "Shift-JIS", "JIS", "EUC", "UTF-8", "NIL", "T"};
 					/* Symbol chars & strings to	*/
 					/* display a KANJI code info to	*/
 					/* the user.  This order depend	*/
 					/* on the values of KANJI code	*/
 					/* macro defined at def.h.	*/
 
-static char *kcodename_u[] = {"NOCONV", "SHIFT-JIS", "JIS", "EUC", "NIL", "T"};
-static char *kcodename_l[] = {"noconv", "shift-jis", "jis", "euc", "nil", "t"};
+static char *kcodename_u[] = {"NOCONV", "SHIFT-JIS", "JIS", "EUC", "UTF-8", "NIL", "T"};
+static char *kcodename_l[] = {"noconv", "shift-jis", "jis", "euc", "utf-8", "nil", "t"};
 #define	NKCODENAME	6
 					/* The strings of KANJI code	*/
 					/* name and the numner of KANJI	*/
@@ -92,10 +92,90 @@ static char *kcodename_l[] = {"noconv", "shift-jis", "jis", "euc", "nil", "t"};
 #define	issjis1st(c)	(((c) >= 0x81 && (c) <= 0x9f) || \
 			 ((c) >= 0xe0 && (c) <= 0xfc))
 #define	iseuc1st(c)	((c) >= 0xa1 && (c) <= 0xfe)
+#define isutf81st(c)	((c) >= 0xc0)
 #ifdef HANKANA
 #define iskana(c)	((c) >= 0xa0 && (c) < 0xe0)
 #endif
 
+#define UCS_NULL 0xfeff
+#include "UCS2JIS.i"
+#include "JIS2UCS.i"
+
+static inline unsigned short _UTF8toUCS(const char utf8[])
+{
+  unsigned short c = 255 & utf8[0];
+
+  if (c < 128)
+    return c;
+  if (!(c & 64)) /* [1] or [2] */
+    return UCS_NULL;
+  if (!(c & 32)) /* [0][1] */
+    return ((31 & c) << 6) | (63 & utf8[1]);
+  if (!(c & 16)) /* [0][1][2] */
+    return ((15 & c) << 12) | ((63 & utf8[1]) << 6) | (63 & utf8[2]);
+  return UCS_NULL;
+}
+
+static inline int _UCStoUTF8(unsigned short ucs, char utf8[])
+{
+  if (ucs == UCS_NULL)
+    return 0;
+  if (ucs < 128) {
+    utf8[0] = (char)ucs;
+    return 1;
+  }
+  if (ucs < 2048) {
+    utf8[0] = (char)(0xc0 | (ucs >> 6));
+    utf8[1] = (char)(0x80 | (63 & ucs));
+    return 2;
+  }
+  utf8[0] = (char)(0xe0 | (ucs >> 12));
+  utf8[1] = (char)(0x80 | (63 & (ucs >> 6)));
+  utf8[2] = (char)(0x80 | (63 & ucs));
+  return 3;
+}
+
+static inline unsigned short _EUCtoUCS(const char euc[])
+{
+  int c = 255 & euc[0];
+
+  switch (c) {
+  case 0x8e:
+    return JIS2UCS[255 & euc[1]];
+  case 0x8f:
+    return JIS2UCS[0x8000 | (((127 & euc[1]) << 8) | (127 & euc[2]))];
+  default:
+    if (c >= 128)
+      c = ((127 & c) << 8) | (127 & euc[1]);
+    return JIS2UCS[c];
+  }
+}
+
+static inline int _UCStoEUC(unsigned short ucs, char euc[])
+{
+  int e = UCS2JIS[ucs];
+
+  if (e == UCS_NULL)
+    return 0;
+  if (e < 128) {
+    euc[0] = (char)e;
+    return 1;
+  }
+  if (e < 256) {
+    euc[0] = (char)0x8e;
+    euc[1] = (char)e;
+    return 2;
+  }
+  if (e < 0x8000) {
+    euc[0] = (char)(0x80 | (e >> 8));
+    euc[1] = (char)(0x80 | e);
+    return 2;
+  }
+  euc[0] = (char)0x8f;
+  euc[1] = (char)(e >> 8);
+  euc[2] = (char)(0x80 | e);
+  return 3;
+}
 
 /* 90.07.25  Change to inline routine  by S.Yoshida (from) */
 #define	jtoe(c1, c2)	{c1 |= 0x80; c2 |= 0x80;}
@@ -156,7 +236,7 @@ int bufstoe_c pro((char *p, int len));
  * COMMAND: change-default-fileio-code
  * This is a command processor for changing the value of the global
  * file I/O KANJI code.  When this function is called, the value is
- * changed rotaly. (NIL -> NOCONV -> SJIS -> JIS -> EUC)
+ * changed rotaly. (NIL -> NOCONV -> SJIS -> JIS -> EUC -> UTF-8)
  */
 /*ARGSUSED*/
 k_rot_fio(f, n)
@@ -170,6 +250,8 @@ k_rot_fio(f, n)
 	} else if (global_kfio == JIS) {
 		global_kfio = EUC;
 	} else if (global_kfio == EUC) {
+		global_kfio = UTF8;
+	} else if (global_kfio == UTF8) {
 		global_kfio = NIL;
 	}
 	return TRUE;
@@ -202,7 +284,7 @@ k_set_fio(f, n)
  * COMMAND: change-fileio-code
  * This is a command processor for changing the value of the buffer
  * local file I/O KANJI code.  When this function is called, the value
- * is changed rotaly. (NIL -> NOCONV -> SJIS -> JIS -> EUC)
+ * is changed rotaly. (NIL -> NOCONV -> SJIS -> JIS -> EUC -> UTF-8)
  */
 /*ARGSUSED*/
 k_rot_buffio(f, n)
@@ -216,6 +298,8 @@ k_rot_buffio(f, n)
 	} else if (curbp->b_kfio == JIS) {
 		curbp->b_kfio = EUC;
 	} else if (curbp->b_kfio == EUC) {
+		curbp->b_kfio = UTF8;
+	} else if (curbp->b_kfio == UTF8) {
 		curbp->b_kfio = NIL;
 	}
 	upmodes(curbp);			/* Only update cur-buf's modeline. */
@@ -274,7 +358,7 @@ k_set_expect(f, n)
  * COMMAND: change-input-code
  * This is a command processor for changing the value of the global
  * keyboard input KANJI code.  When this function is called, the value
- * is changed rotaly. (NOCONV -> SJIS -> JIS -> EUC)
+ * is changed rotaly. (NOCONV -> SJIS -> JIS -> EUC -> UTF8)
  */
 /*ARGSUSED*/
 k_rot_input(f, n)
@@ -286,6 +370,8 @@ k_rot_input(f, n)
 	} else if (global_kinput == JIS) {
 		global_kinput = EUC;
 	} else if (global_kinput == EUC) {
+		global_kinput = UTF8;
+	} else if (global_kinput == UTF8) {
 		global_kinput = NOCONV;
 	}
 	upmodes(NULL);			/* Update each win's modeline. */
@@ -321,7 +407,7 @@ k_set_input(f, n)
  * COMMAND: change-display-code
  * This is a command processor for changing the value of the global
  * display KANJI code.  When this function is called, the value is
- * changed rotaly. (NOCONV -> SJIS -> JIS -> EUC)
+ * changed rotaly. (NOCONV -> SJIS -> JIS -> EUC -> UTF8)
  */
 /*ARGSUSED*/
 k_rot_display(f, n)
@@ -333,6 +419,8 @@ k_rot_display(f, n)
 	} else if (global_kdisplay == JIS) {
 		global_kdisplay = EUC;
 	} else if (global_kdisplay == EUC) {
+		global_kdisplay = UTF8;
+	} else if (global_kdisplay == UTF8) {
 		global_kdisplay = NOCONV;
 	}
 	sgarbf = TRUE;			/* Must update full screen. */
@@ -924,6 +1012,25 @@ reinput:
 	} else if (global_kinput == EUC && iseuc1st(c1)) {
 		savedchar = getkbd();
 		kgetkey_more = TRUE;
+	} else if (global_kinput == UTF8 && isutf81st(c1)) {
+		char buf[4];
+		unsigned short ucs;
+
+		buf[0] = (char)c1;
+		buf[1] = (char)getkbd();
+		if (!(c1 & 16))
+			buf[2] = (char)getkbd();
+		else if (!(c1 & 8)) {
+			buf[2] = (char)getkbd();
+			buf[3] = (char)getkbd();
+		}
+		if ((ucs = _UTF8toUCS(buf)) == UCS_NULL)
+			goto reinput;
+		if ((unsigned int)(c2 = _UCStoEUC(ucs, buf) - 1) > 1)
+			goto reinput;
+		c1 = 255 & buf[0];
+		savedchar = 255 & buf[1];
+		kgetkey_more = c2;
 #ifdef VTCURSOR /* 92.03.16 by Gen KUROKI, renamed by amura */
 	} else if (c1 == ESC) {
 		c1 = getkbd();
@@ -1059,6 +1166,18 @@ register int	c;	/* 90.07.25  Add "register". by S.Yoshida */
 			etos(c1, c);
 			ttputkc(c1, c);
 			c1 = '\0';	/* 91.01.15  NULL -> '\0' */
+		} else if (global_kdisplay == UTF8) {
+			char buf[4];
+			unsigned short ucs;
+			int i;
+
+			buf[0] = (char)c1;
+			buf[1] = (char)c;
+			if ((ucs = _EUCtoUCS(buf)) != UCS_NULL &&
+			    (c = _UCStoUTF8(ucs, buf)) != 0)
+				for (i = 0; i < c; ++i)
+					ttputc(buf[i]);
+			c1 = '\0';
 		} else {		/* May be EUC. */
 #ifdef HANKANA
 			if (ISHANKANA(c1)) {
@@ -1228,6 +1347,18 @@ register int	kfio;
 			putc(c, fp);
 			c1 = '\0';	/* 91.01.15  NULL -> '\0' */
 #endif /* HANKANA */
+		} else if (kfio == UTF8) {
+			char buf[4];
+			unsigned short ucs;
+			int i;
+
+			buf[0] = (char)c1;
+			buf[1] = (char)c;
+			if ((ucs = _EUCtoUCS(buf)) != UCS_NULL &&
+			    (c = _UCStoUTF8(ucs, buf)) != 0)
+				for (i = 0; i < c; ++i)
+					putc(buf[i], fp);
+			c1 = '\0';
 		} else {		/* May be EUC. */
 			putc(c1, fp);
 			putc(c, fp);
@@ -1313,7 +1444,7 @@ register BUFFER	*bp;
 }
 
 /*
- * Convert KANJI code form a file code (JIS/Shift-JIS/EUC) to
+ * Convert KANJI code form a file code (JIS/Shift-JIS/EUC/UTF-8) to
  * a buffer code (EUC) in the text line.
  * When file KANJI code is not decided, we check and determine it
  * to see a text line.
@@ -1335,6 +1466,8 @@ register BUFFER	*bp;
 #else  /* Not HANKANA */
 			bufstoe(buf, len);
 #endif  /* HANKANA */
+		} else if (local_kfin == UTF8) {
+			len = bufutoe(buf, len);
 		}			/* EUC need not convert. */
 		if (bp != NULL &&
 		    bp->b_kfio == NIL) { /* set buffer local code. */
@@ -1344,8 +1477,8 @@ register BUFFER	*bp;
 	return(len);
 }
 /*
- * Count after converting KANJI code form a file code (JIS/Shift-JIS/EUC) to
- * a buffer code (EUC) in the text line.
+ * Count after converting KANJI code form a file code
+ * (JIS/Shift-JIS/EUC/UTF-8) to a buffer code (EUC) in the text line.
  * When file KANJI code is not decided, we check and determine it
  * to see a text line.
  */
@@ -1362,6 +1495,8 @@ register int	len;
 			len = bufjtoe_c(buf, len);
 		} else if (local_kfin == SJIS) {
 			len = bufstoe_c(buf, len);
+		} else if (local_kfin == UTF8) {
+			len = bufutoe_c(buf, len);
 		}
 	}
 	return(len);
@@ -1394,6 +1529,8 @@ int	len;
 			  notjis = TRUE;
 			if (c < 0xa0 && c != SS2 && c != SS3) {
 				return (SJIS);
+			} else if (c >= 0xc0) {
+				return (UTF8);
 	 		} else if (c > 0xef) {
 				return (EUC);
 			}
@@ -1426,6 +1563,8 @@ int	len;
 			notjis = TRUE;
 			if (c < 0xa0) {
 				return (SJIS);
+			} else if (c >= 0xc0) {
+				return (UTF8);
 			} else if (c < 0xe0 || c > 0xef) {
 				return (EUC);
 			}
@@ -1592,6 +1731,50 @@ int	len;
 }
 #endif /* HANKANA */
 
+/*
+ * Convert KANJI code from UTF-8 to EUC of the text in a buffer.
+ */
+bufutoe(p, len)
+char	*p;
+int	len;
+{
+	unsigned short *tmpucs;
+	int ulen, ucs, ui;
+	char *s, *ends;
+
+	if ( len == 0 ) return(0);
+	ulen = (int)(sizeof *tmpucs * len);
+	if((tmpucs = alloca(ulen)) == NULL) {
+	    ewprintf("Could not allocate %d bytes", ulen);
+	    return(-1);
+	}
+	ulen = 0;
+	for (s = p, ends = p + len; s < ends;) {
+		ucs = 255 & *s++;
+		if (ucs >= 128) {
+			if (!(ucs & 64))
+				continue;
+			else if (!(ucs & 32))
+				ucs = ((31 & ucs) << 6) | (63 & *s++);
+			else if (!(ucs & 16)) {
+				ucs = ((15 & ucs) << 12) | ((63 & *s) << 6) |
+				    (63 & *(s + 1));
+				s += 2;
+			} else if (!(ucs & 8)) {
+				s += 3;
+				continue;
+			}
+		}
+		tmpucs[ulen++] = ucs;
+	}
+	s = p;
+	for (ui = 0; ui < ulen; ++ui) {
+		ucs = tmpucs[ui];
+		s += _UCStoEUC(ucs, s);
+	}
+	return s - p;
+}
+
 VOID
 bufetos(p, len)
 char	*p;
@@ -1717,6 +1900,44 @@ int	len;
 		}
 	}
 	return(len);
+}
+
+int
+bufutoe_c(p, len)
+char	*p;
+int	len;
+{
+	int ulen, ucs, ui;
+	char *s, *ends;
+
+	if ( len == 0 ) return(0);
+	ulen = 0;
+	for (s = p, ends = p + len; s < ends;) {
+		ucs = 255 & *s++;
+		if (ucs >= 128) {
+			if (!(ucs & 64))
+				continue;
+			else if (!(ucs & 32))
+				ucs = ((31 & ucs) << 6) | (63 & *s++);
+			else if (!(ucs & 16)) {
+				ucs = ((15 & ucs) << 12) | ((63 & *s) << 6) |
+				    (63 & *(s + 1));
+				s += 2;
+			} else if (!(ucs & 8)) {
+				s += 3;
+				continue;
+			}
+		}
+		if ((ucs = UCS2JIS[ucs]) == UCS_NULL)
+			continue;
+		if (ucs < 128)
+			++ulen;
+		else if (ucs < 0x8000)
+			ulen += 2;
+		else
+			ulen += 3;
+	}
+	return ulen;
 }
 #endif /* SS_SUPPORT */
 

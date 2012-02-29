@@ -79,6 +79,9 @@ char **argv;
 	VOID	vtinit(), makename(), eerase();
 	BUFFER  *tmpbp;	/* 91.02.17 by N.Yuasa */
 	BUFFER	*findbuffer();
+#ifdef KANJI
+	extern int global_kexpect;
+#endif
 
 #ifdef	ADDFUNC	/* 90.12.28  by S.Yoshida */
 	if (argc > 1 && argv[1][0] == '-') {
@@ -120,6 +123,20 @@ char **argv;
 			argv++;
 			break;
 #endif	/* ADDOPT */
+#ifdef KANJI
+		    case 'S':
+			global_kexpect = SJIS;
+			break;
+		    case 'J':
+			global_kexpect = JIS;
+			break;
+		    case 'E':
+			global_kexpect = EUC;
+			break;
+		    case 'W':
+			global_kexpect = UTF8;
+			break;
+#endif
 		    default:
 			break;
 		}

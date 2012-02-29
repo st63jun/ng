@@ -376,6 +376,10 @@ isearch(dir) {
 				/* If the KANJI 1st byte exists,	*/
 				/* we believe 'c' is KANJI 2nd byte.	*/
 				kanji1st--;
+				if (kanji1st) {
+					c = getkey(FALSE);
+					goto addchar;
+				}
 			} else if (ISKANJI(c)) {
 				/* When there is only KANJI 1st		*/
 				/* byte, we don't search a patern.	*/
@@ -384,6 +388,8 @@ isearch(dir) {
 				else
 #endif				
 				kanji1st = 1;	
+				c = getkey(FALSE);
+				goto addchar;
 				break;
 			}
 #endif	/* KANJI */
