@@ -126,15 +126,23 @@ char **argv;
 #ifdef KANJI
 		    case 'S':
 			global_kexpect = SJIS;
+		        --argc;
+		        argv++;
 			break;
 		    case 'J':
 			global_kexpect = JIS;
+		        --argc;
+		        argv++;
 			break;
 		    case 'E':
 			global_kexpect = EUC;
+		        --argc;
+		        argv++;
 			break;
 		    case 'W':
 			global_kexpect = UTF8;
+		        --argc;
+		        argv++;
 			break;
 #endif
 		    default:
