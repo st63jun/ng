@@ -68,7 +68,7 @@
 
 #define	MINIBUF_EDIT	/* minibuffer edit like GNU emacs (by Kakugawa)	*/
 
-#define	NEXTLINE 1	/* next-line-add-newlines (by S.Yoshida) */
+#define	NEXTLINE 0	/* next-line-add-newlines (by S.Yoshida) */
 
 #define EMACS_QUERY_KEYS /* isearch/query-replace key bindings compatible */
 			/* with GNU Emacs 19 and later (by Shimbo)*/
